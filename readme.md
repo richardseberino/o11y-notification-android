@@ -10,7 +10,7 @@ Este é um projeto de código aberto, disponível para forks ou contribuições.
 O propósito deste projeto é server como mecanismo de notificação para soluções como Dynatrace (nosso primeiro use case).
 
 Mais informações visite o site do projeto
-https://observcability.seberino.com.br
+https://observability-notification.web.app
 
 ## 2 - Features da versão atual
 
