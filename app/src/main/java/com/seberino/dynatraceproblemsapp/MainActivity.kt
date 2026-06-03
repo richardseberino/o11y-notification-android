@@ -9,7 +9,14 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -28,6 +35,7 @@ import com.seberino.dynatraceproblemsapp.data.model.DynatraceInstance
 import com.seberino.dynatraceproblemsapp.ui.MainViewModel
 import com.seberino.dynatraceproblemsapp.ui.screens.AddEditInstanceScreen
 import com.seberino.dynatraceproblemsapp.ui.screens.InstanceListScreen
+import com.seberino.dynatraceproblemsapp.ui.screens.ProblemDetailScreen
 import com.seberino.dynatraceproblemsapp.ui.screens.ProblemListScreen
 import com.seberino.dynatraceproblemsapp.ui.theme.DynatraceProblemsAppTheme
 import com.seberino.dynatraceproblemsapp.worker.ProblemWorker
@@ -148,17 +156,39 @@ class MainActivity : ComponentActivity() {
                             nextPageKey = nextPageKey,
                             onLoadMore = { viewModel.loadProblems(instanceId, loadNextPage = true) },
                             onProblemClick = { problem ->
-                                scope.launch {
-                                    val instance = Graph.repository.getInstanceById(instanceId)
-                                    instance?.let {
-                                        val baseUrl = it.url.trimEnd('/')
-                                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("$baseUrl/#problems/problemdetails;pid=${problem.displayId}"))
-                                        startActivity(intent)
-                                    }
-                                }
+                                navController.navigate("problem_detail/${instanceId}/${problem.displayId}")
                             },
                             onBack = { navController.popBackStack() }
                         )
+                    }
+                    composable(
+                        "problem_detail/{instanceId}/{displayId}",
+                        arguments = listOf(
+                            navArgument("instanceId") { type = NavType.IntType },
+                            navArgument("displayId") { type = NavType.StringType }
+                        )
+                    ) { backStackEntry ->
+                        val instanceId = backStackEntry.arguments?.getInt("instanceId") ?: 0
+                        val displayId = backStackEntry.arguments?.getString("displayId") ?: ""
+                        val problem by viewModel.problemDetail.collectAsState()
+                        var instance by remember { mutableStateOf<DynatraceInstance?>(null) }
+                        
+                        LaunchedEffect(instanceId, displayId) {
+                            instance = Graph.repository.getInstanceById(instanceId)
+                            viewModel.loadProblemDetails(instanceId, displayId)
+                        }
+
+                        if (problem != null && instance != null) {
+                            ProblemDetailScreen(
+                                problem = problem!!,
+                                baseUrl = instance!!.url,
+                                onBack = { navController.popBackStack() }
+                            )
+                        } else {
+                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                CircularProgressIndicator()
+                            }
+                        }
                     }
                 }
             }

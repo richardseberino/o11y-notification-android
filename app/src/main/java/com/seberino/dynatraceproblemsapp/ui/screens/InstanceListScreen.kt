@@ -1,5 +1,6 @@
 package com.seberino.dynatraceproblemsapp.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -13,8 +14,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.seberino.dynatraceproblemsapp.BuildConfig
+import com.seberino.dynatraceproblemsapp.R
 import com.seberino.dynatraceproblemsapp.data.model.DynatraceInstance
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,9 +35,37 @@ fun InstanceListScreen(
     onDeleteInstance: (DynatraceInstance) -> Unit,
     onRefresh: () -> Unit
 ) {
+    val currentDate = remember { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date()) }
+    val version = BuildConfig.VERSION_NAME
+
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Dynatrace Instances") })
+            TopAppBar(
+                title = { 
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                            contentDescription = null,
+                            modifier = Modifier.size(40.dp).padding(end = 8.dp)
+                        )
+                        Text("Dynatrace Instances")
+                    }
+                }
+            )
+        },
+        bottomBar = {
+            Surface(
+                tonalElevation = 3.dp,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "Versão $version - $currentDate",
+                    modifier = Modifier.padding(8.dp).fillMaxWidth(),
+                    style = MaterialTheme.typography.labelSmall,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         },
         floatingActionButton = {
             FloatingActionButton(onClick = onAddInstanceClick) {

@@ -36,6 +36,9 @@ class MainViewModel(private val repository: DynatraceRepository) : ViewModel() {
     private val _debugMessage = MutableStateFlow("")
     val debugMessage: StateFlow<String> = _debugMessage.asStateFlow()
 
+    private val _problemDetail = MutableStateFlow<Problem?>(null)
+    val problemDetail: StateFlow<Problem?> = _problemDetail.asStateFlow()
+
     init {
         viewModelScope.launch {
             instances.collect { list ->
@@ -44,14 +47,30 @@ class MainViewModel(private val repository: DynatraceRepository) : ViewModel() {
         }
     }
 
+    fun loadProblemDetails(instanceId: Int, displayId: String) {
+        viewModelScope.launch {
+            _problemDetail.value = null
+            
+            val instance = repository.getInstanceById(instanceId)
+            if (instance != null) {
+                val basicProblem = _problems.value.find { it.displayId == displayId }
+                if (basicProblem != null) {
+                    val detailed = repository.getProblemWithDetails(instance, basicProblem.problemId)
+                    _problemDetail.value = detailed
+                }
+            }
+        }
+    }
+
     fun loadProblems(instanceId: Int, loadNextPage: Boolean = false) {
         viewModelScope.launch {
+            if (loadNextPage && _nextPageKey.value == null) return@launch
+            
+            _isLoading.value = true
+            
             if (!loadNextPage) {
-                _isLoading.value = true
                 _problems.value = emptyList()
                 _nextPageKey.value = null
-            } else if (_nextPageKey.value == null) {
-                return@launch
             }
 
             val instance = repository.getInstanceById(instanceId)
@@ -62,9 +81,6 @@ class MainViewModel(private val repository: DynatraceRepository) : ViewModel() {
                 } else {
                     _problems.value = response.problems
                 }
-                // Handle nextPageKey from response - it might be in the response headers or body
-                // Dynatrace V2 usually returns nextPageKey in the JSON body if there's more
-                // Need to ensure ProblemsResponse has it. Let me check ProblemsResponse.
                 _totalCount.value = response.totalCount
                 _nextPageKey.value = response.nextPageKey
             }
@@ -90,6 +106,10 @@ class MainViewModel(private val repository: DynatraceRepository) : ViewModel() {
             }
             _problemCounts.value = counts
         }
+    }
+
+    fun getProblemById(displayId: String): Problem? {
+        return _problems.value.find { it.displayId == displayId }
     }
 
     fun addInstance(name: String, url: String, token: String, filter: String?, pageSize: Int, notificationsEnabled: Boolean) {

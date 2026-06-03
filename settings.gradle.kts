@@ -22,6 +22,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Dynatrace Problems App"
+rootProject.name = "Observability Notification"
 include(":app")
  

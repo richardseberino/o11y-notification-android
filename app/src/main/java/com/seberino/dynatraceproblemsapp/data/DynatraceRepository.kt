@@ -38,32 +38,53 @@ class DynatraceRepository(
         }
     }
 
+    private fun getApiUrl(baseUrl: String, endpoint: String): String {
+        val cleanBase = baseUrl.trimEnd('/')
+        return when {
+            cleanBase.endsWith(endpoint) -> cleanBase
+            cleanBase.contains("/api/v2") -> "$cleanBase/${endpoint.removePrefix("/api/v2/").removePrefix("/")}"
+            else -> "$cleanBase/api/v2/${endpoint.removePrefix("/")}"
+        }
+    }
+
     suspend fun getProblemsForInstance(instance: DynatraceInstance, nextPageKey: String? = null): ProblemsResponse {
-        val baseUrl = instance.url.trimEnd('/')
-        val apiUrl = if (baseUrl.contains("/api/v2")) baseUrl else "$baseUrl/api/v2/problems"
-        // Ensure we don't duplicate /problems if it's already there
-        val finalUrl = if (apiUrl.endsWith("/problems")) apiUrl else "$apiUrl/problems"
-        
+        val finalUrl = getApiUrl(instance.url, "problems")
         val token = "Api-Token ${instance.token}"
         
-        val selector = instance.filterSegmentation?.takeIf { it.isNotBlank() }?.let {
-            "status(\"open\"),$it"
-        } ?: "status(\"open\")"
+        // Se temos nextPageKey, os filtros já estão embutidos nele e 'from' deve ser null
+        val selector = if (nextPageKey == null) {
+            instance.filterSegmentation?.takeIf { it.isNotBlank() }?.let {
+                "status(\"open\"),$it"
+            } ?: "status(\"open\")"
+        } else null
+
+        val fromTime = if (nextPageKey == null) "now-30d" else null
 
         return try {
-            android.util.Log.d("DynatraceRepo", "Fetching problems from $finalUrl with selector: $selector, pageSize: ${instance.pageSize}, nextPageKey: $nextPageKey")
+            android.util.Log.d("DynatraceRepo", "Fetching problems. nextPageKey: ${nextPageKey != null}")
             val response = apiService.getProblems(
                 url = finalUrl, 
                 token = token, 
                 problemSelector = selector, 
+                from = fromTime,
                 pageSize = if (nextPageKey == null) instance.pageSize else null,
                 nextPageKey = nextPageKey
             )
-            android.util.Log.d("DynatraceRepo", "Found ${response.problems.size} problems, totalCount: ${response.totalCount}")
+            android.util.Log.d("DynatraceRepo", "Received ${response.problems.size} problems. NextPageKey exists: ${response.nextPageKey != null}")
             response
         } catch (e: Exception) {
             android.util.Log.e("DynatraceRepo", "Error fetching problems: ${e.message}", e)
-            com.seberino.dynatraceproblemsapp.data.model.ProblemsResponse(0, 0, emptyList())
+            ProblemsResponse(0, 0, emptyList())
+        }
+    }
+
+    suspend fun getProblemWithDetails(instance: DynatraceInstance, problemId: String): com.seberino.dynatraceproblemsapp.data.model.Problem? {
+        val finalUrl = getApiUrl(instance.url, "problems/$problemId")
+        return try {
+            apiService.getProblemDetails(finalUrl, "Api-Token ${instance.token}")
+        } catch (e: Exception) {
+            android.util.Log.e("DynatraceRepo", "Error fetching problem details: ${e.message}")
+            null
         }
     }
 }

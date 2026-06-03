@@ -8,15 +8,16 @@ import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.work.CoroutineWorker
+import androidx.work.ListenableWorker
 import androidx.work.WorkerParameters
 import com.seberino.dynatraceproblemsapp.MainActivity
+import com.seberino.dynatraceproblemsapp.R
 import com.seberino.dynatraceproblemsapp.data.Graph
-import com.seberino.dynatraceproblemsapp.data.model.DynatraceInstance
 import kotlinx.coroutines.flow.first
 
 class ProblemWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
 
-    override suspend fun doWork(): androidx.work.ListenableWorker.Result {
+    override suspend fun doWork(): ListenableWorker.Result {
         val repository = Graph.repository
         val instances = repository.allInstances.first()
 
@@ -26,7 +27,7 @@ class ProblemWorker(context: Context, params: WorkerParameters) : CoroutineWorke
             val response = repository.getProblemsForInstance(instance)
             val latestProblem = response.problems.firstOrNull()
 
-            if (latestProblem != null && latestProblem.displayId != instance.lastSeenProblemId) {
+            if (latestProblem != null && (latestProblem.displayId != instance.lastSeenProblemId)) {
                 // New problem detected
                 sendNotification(instance.name, latestProblem.title)
                 
@@ -35,17 +36,15 @@ class ProblemWorker(context: Context, params: WorkerParameters) : CoroutineWorke
             }
         }
 
-        return androidx.work.ListenableWorker.Result.success()
+        return ListenableWorker.Result.success()
     }
 
     private fun sendNotification(instanceName: String, problemTitle: String) {
         val channelId = "problem_notifications"
         val notificationManager = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(channelId, "Problem Notifications", NotificationManager.IMPORTANCE_DEFAULT)
-            notificationManager.createNotificationChannel(channel)
-        }
+        val channel = NotificationChannel(channelId, "Problem Notifications", NotificationManager.IMPORTANCE_DEFAULT)
+        notificationManager.createNotificationChannel(channel)
 
         val intent = Intent(applicationContext, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -53,7 +52,7 @@ class ProblemWorker(context: Context, params: WorkerParameters) : CoroutineWorke
         val pendingIntent = PendingIntent.getActivity(applicationContext, 0, intent, PendingIntent.FLAG_IMMUTABLE)
 
         val notification = NotificationCompat.Builder(applicationContext, channelId)
-            .setSmallIcon(android.R.drawable.ic_dialog_alert)
+            .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle("New Problem in $instanceName")
             .setContentText(problemTitle)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)

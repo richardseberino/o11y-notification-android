@@ -8,12 +8,35 @@ data class ProblemsResponse(
 )
 
 data class Problem(
+    val problemId: String,
     val displayId: String,
     val title: String,
     val startTime: Long,
+    val endTime: Long? = null,
     val status: String,
     val severityLevel: String,
-    val affectedEntities: List<EntityInfo>
+    val impactLevel: String? = null,
+    val affectedEntities: List<EntityInfo>,
+    val evidenceDetails: EvidenceDetails? = null
+)
+
+data class EvidenceDetails(
+    val totalCount: Int,
+    val details: List<Evidence>
+)
+
+data class Evidence(
+    val evidenceType: String,
+    val displayName: String,
+    val entity: EntityInfo? = null,
+    val startTime: Long? = null,
+    val endTime: Long? = null,
+    val dataPoints: List<DataPoint>? = null
+)
+
+data class DataPoint(
+    val timestamp: Long,
+    val value: Double
 )
 
 data class EntityInfo(
