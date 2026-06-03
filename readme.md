@@ -1,8 +1,8 @@
 # Observability Notification
 ## Projeto de Código Aberto
 
-Autor: Richard Marques (richard@seberino.com.br)
-Criação: 01/06/2026
+<li>Autor: Richard Marques (richard@seberino.com.br)
+<li>Criação: 01/06/2026
 
 ## 1 - Introdução
 
@@ -31,11 +31,11 @@ Outra ação que pode ser feita é compartilhar o link do proglema com algum col
 
 ## Requisitos
 Para o aplicativo funcionar você precisa cadastrar ao menos 1 instancia Dynatrace e para isso você vai precisar das informações abaixo:
-a) Nome do ambiente (um nome amigável para reconhecer o ambiente na lista)
-b) URL (url do dynatrace, algo como https://teste.live.dynatrace.com). Substitua a palavra teste pelo nome da sua instancia.
-c) Itens por página daquela instancia
-d) API Token: Aqui é o Token gerado no Dynatrace com as permissões: Read Configurations, e Read Problems 
-e) Items per page: Aqui é o número máximo que você vai exibir por página na lista de Problemas. 
-f) Opcionalmente pode infromar o Managed Zone (durante o primeiro cadastro é necessário clicar em Fetch Zones para cagarregar a lista)
+<li>a) Nome do ambiente (um nome amigável para reconhecer o ambiente na lista)
+<li>b) URL (url do dynatrace, algo como https://teste.live.dynatrace.com). Substitua a palavra teste pelo nome da sua instancia.
+<li>c) Itens por página daquela instancia
+<li>d) API Token: Aqui é o Token gerado no Dynatrace com as permissões: Read Configurations, e Read Problems 
+<li>e) Items per page: Aqui é o número máximo que você vai exibir por página na lista de Problemas. 
+<li>f) Opcionalmente pode infromar o Managed Zone (durante o primeiro cadastro é necessário clicar em Fetch Zones para cagarregar a lista)
 
 Além do cadastro do ambiente você vai precisar de sinal 5G, ou conexão via rede wi-fii
